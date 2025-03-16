@@ -1,4 +1,9 @@
 version: 2.1
+executors:
+  node-executor:
+    docker:
+      - image: cimg/node:18.20.5
+    working_directory: ~/project
 jobs:
   test:
     docker:
@@ -37,6 +42,16 @@ jobs:
           assertions: assertions.json
           metrics: eval_results.json
           results: test_results.xml
+  playwright-e2e-tests:
+    executor: node-executor
+    steps:
+      - checkout
+      - run:
+          name: Install dependencies
+          command: npm install
+      - run:
+          name: Run Playwright Tests
+          command: npx playwright test
 workflows:
   example:
     jobs:
@@ -80,5 +95,6 @@ workflows:
   test-eval-workflow:
     jobs:
       - evals-test-assertions-job
-orbs:
-  evals: circleci/evals@2.0
+  playwright-workflow:
+    jobs:
+      - playwright-e2e-tests
