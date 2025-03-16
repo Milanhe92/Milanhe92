@@ -1,100 +1,28 @@
 version: 2.1
 executors:
-  node-executor:
+  docker-executor:
     docker:
-      - image: cimg/node:18.20.5
+      - image: cimg/base:stable
     working_directory: ~/project
 jobs:
-  test:
-    docker:
-      - image: cimg/base:stable
+  build_and_push_to_ecr:
+    executor: docker-executor
     steps:
       - checkout
+      - setup_remote_docker
       - run:
-          name: Run tests
-          command: echo 'replace me with real tests!' && false
-  build:
-    docker:
-      - image: cimg/base:stable
-    steps:
-      - checkout
+          name: Login to AWS ECR
+          command: |
+            echo $AWS_ECR_PASSWORD | docker login -u $AWS_ECR_USERNAME --password-stdin $AWS_ECR_URL
       - run:
-          name: Build an artifact
-          command: touch example.txt
-      - store_artifacts:
-          path: example.txt
-  deploy:
-    docker:
-      - image: cimg/base:stable
-    steps:
+          name: Build Docker Image
+          command: docker build -t $AWS_ECR_URL/$AWS_ECR_REPOSITORY:$CIRCLE_SHA1 .
       - run:
-          name: deploy
-          command: "#e.g. ./deploy.sh"
-      - run:
-          name: found empty repo
-          command: ":"
-  evals-test-assertions-job:
-    docker:
-      - image: cimg/base:stable
-    steps:
-      - checkout
-      - evals/test:
-          assertions: assertions.json
-          metrics: eval_results.json
-          results: test_results.xml
-  playwright-e2e-tests:
-    executor: node-executor
-    steps:
-      - checkout
-      - run:
-          name: Install dependencies
-          command: npm install
-      - run:
-          name: Run Playwright Tests
-          command: npx playwright test
+          name: Push Docker Image
+          command: docker push $AWS_ECR_URL/$AWS_ECR_REPOSITORY:$CIRCLE_SHA1
 workflows:
-  example:
+  version: 2
+  build_and_deploy:
     jobs:
-      - test:
-          context:
-            - LlamaAPI-milanhe92@gmail.com
-            - OpenAI-milanhe92@gmail.com
-            - Anthropic-milanhe92@gmail.com
-            - AmazonBedrock-milanhe92@gmail.com
-            - Gemini-milanhe92@gmail.com
-            - CloudflareVectorize-milanhe92@gmail.com
-            - AmazonS3-milanhe92@gmail.com
-            - ChromaDB-milanhe92@gmail.com
-            - Supabase-milanhe92@gmail.com
-      - build:
-          requires:
-            - test
-          context:
-            - LlamaAPI-milanhe92@gmail.com
-            - OpenAI-milanhe92@gmail.com
-            - Anthropic-milanhe92@gmail.com
-            - AmazonBedrock-milanhe92@gmail.com
-            - Gemini-milanhe92@gmail.com
-            - CloudflareVectorize-milanhe92@gmail.com
-            - AmazonS3-milanhe92@gmail.com
-            - ChromaDB-milanhe92@gmail.com
-            - Supabase-milanhe92@gmail.com
-      - deploy:
-          requires:
-            - test
-          context:
-            - LlamaAPI-milanhe92@gmail.com
-            - OpenAI-milanhe92@gmail.com
-            - Anthropic-milanhe92@gmail.com
-            - AmazonBedrock-milanhe92@gmail.com
-            - Gemini-milanhe92@gmail.com
-            - CloudflareVectorize-milanhe92@gmail.com
-            - AmazonS3-milanhe92@gmail.com
-            - ChromaDB-milanhe92@gmail.com
-            - Supabase-milanhe92@gmail.com
-  test-eval-workflow:
-    jobs:
-      - evals-test-assertions-job
-  playwright-workflow:
-    jobs:
-      - playwright-e2e-tests
+      - build_and_push_to_ecr:
+          context: aws-ecr-context
