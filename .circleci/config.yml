@@ -1,22 +1,28 @@
 version: 2.1
 executors:
-  ios-executor:
-    macos:
-      xcode: 14.0.0
+  docker-executor:
+    docker:
+      - image: cimg/base:stable
     working_directory: ~/project
 jobs:
-  build_ios:
-    executor: ios-executor
+  build_and_push:
+    executor: docker-executor
     steps:
       - checkout
+      - setup_remote_docker
       - run:
-          name: Install Fastlane
-          command: bundle install
+          name: Build Docker Image
+          command: docker build -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$CIRCLE_SHA1 .
       - run:
-          name: Run Fastlane
-          command: bundle exec fastlane ios build
+          name: Login to ECR
+          command: |
+            aws ecr get-login-password --region $AWS_REGION | \
+            docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
+      - run:
+          name: Push Docker Image
+          command: docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$ECR_REPOSITORY:$CIRCLE_SHA1
 workflows:
-  version: 2
-  build:
+  build_and_deploy:
     jobs:
-      - build_ios
+      - build_and_push:
+          context: aws-ecr-context
