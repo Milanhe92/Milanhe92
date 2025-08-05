@@ -32,3 +32,49 @@ graph LR
   G --> I[React]
   J[Kvantno] --> K[Qiskit]
   J --> L[Cirq]
+### Dodatni elementi za GitHub profil:  
+1. **Dinamički banner**:  
+   - Kreirajte `assets/banner.png` u repozitorijumu  
+   - Preporuka: Canva ili Figma sa temom kvantnog računarstva  
+
+2. **Prikvačeni repozitorijumi**:  
+   - Idite na profil → "Customize your pins"  
+   - Odaberite 6 najvažnijih projekata  
+   - Preporuka:  
+     - Melektron-ai  
+     - Melektron-v9  
+     - sdk  
+     - quantum-core  
+     - ton-utils  
+     - execution-apis  
+
+3. **Achievements**:  
+   - U "Achievements" sekciji aktivirajte:  
+     - Pair Extraordinaire  
+     - Quickdraw  
+     - Starstruck  
+
+4. **GitHub Actions za automatsko ažuriranje**:  
+   Dodajte `.github/workflows/update-readme.yml`:  
+   ```yaml
+   name: Update Profile
+   on:
+     schedule:
+       - cron: '0 0 * * *'
+     workflow_dispatch:
+   jobs:
+     update:
+       runs-on: ubuntu-latest
+       steps:
+         - uses: actions/checkout@v4
+         - name: Update stats
+           uses: AnandChowdhary/activity-box@latest
+           with:
+             GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+         - name: Commit changes
+           run: |
+             git config user.name github-actions
+             git config user.email actions@users.noreply.github.com
+             git add .
+             git commit -m "Update stats"
+             git push
