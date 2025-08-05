@@ -32,11 +32,12 @@ graph LR
   G --> I[React]
   J[Kvantno] --> K[Qiskit]
   J --> L[Cirq]
+
 ### Dodatni elementi za GitHub profil:  
 1. **Dinamički banner**:  
    - Kreirajte `assets/banner.png` u repozitorijumu  
    - Preporuka: Canva ili Figma sa temom kvantnog računarstva  
-
+---
 2. **Prikvačeni repozitorijumi**:  
    - Idite na profil → "Customize your pins"  
    - Odaberite 6 najvažnijih projekata  
